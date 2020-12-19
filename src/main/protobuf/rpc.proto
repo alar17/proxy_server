@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_outer_classname = "PrimeNumberServicesProto";
+option java_package = "com.primenumbers.server.grpc";
+
+package server;
+
+/**
+ * Prime number calculation service
+ */
+service PrimeNumbersService {
+  /**
+   * Receives a request including the upperbound of prime number series and returns either
+   * a stream of prime numbers or some validation errors
+   */
+  rpc sendPrimeNumbersStream (ReadNumbersRequest) returns (stream PrimeNumbersResponse) {}
+}
+
+/**
+ * Request to calculate a new prime number series up to the "upperbound" value
+ */
+message ReadNumbersRequest {
+  int32 upperBound = 1;
+}
+
+message PrimeNumbersResponse {
+    oneof response {
+      string validationError = 1;
+      int32 primeNumber = 2;
+    }
+}
