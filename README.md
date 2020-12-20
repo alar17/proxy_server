@@ -1,5 +1,5 @@
 # proxy_server
-A second part of the duo which delivers prime numbers 
+Second part of the duo which delivers prime numbers 
 
 ### 1) Connecting to the prime number server
 
