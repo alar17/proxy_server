@@ -1,6 +1,5 @@
 package com.proxy.server.primenumbersserver;
 
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -30,12 +29,12 @@ public class PrimeNumbersProtocol {
         this.client = client;
     }
     
-    public Tuple2<Option<String>, Source<PrimeNumbersResponse, NotUsed>> readItem(Integer number) {
+    public Tuple2<Option<String>, Source<Integer, NotUsed>> readItem(Integer number) {
         final Source<PrimeNumbersResponse, NotUsed> source = client.sendPrimeNumbersStream(ReadNumbersRequest.newBuilder()
             .setUpperBound(number).build()
         );
         
-        boolean debug = true; // TODO: Get from config
+        boolean debug = false; // TODO: Get from config
         if(debug) {
             source.runForeach(r -> {
                 log.debug("Received from stream: {}", r);
@@ -46,7 +45,7 @@ public class PrimeNumbersProtocol {
         
         try {
             firstElement = source.take(1).runWith(Sink.head(), materializer)
-                .toCompletableFuture().get(5, TimeUnit.SECONDS);
+                .toCompletableFuture().get(10, TimeUnit.SECONDS); // If we don't receive the first element in 10 seconds, we will return the server error
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             return Tuple.of(Option.of("Server Error!"), Source.empty());
         }
@@ -54,6 +53,8 @@ public class PrimeNumbersProtocol {
         // Read the first item and then reply based on that.. either an error or the 
         boolean valid = firstElement.getValidationError().isEmpty();
             
-        return valid ? Tuple.of(Option.none(), source) : Tuple.of(Option.of(firstElement.getValidationError()), Source.empty());        
+        return valid ?
+            Tuple.of(Option.none(), source.map(item -> item.getPrimeNumber())) : // Returns the validation error
+            Tuple.of(Option.of(firstElement.getValidationError()), Source.empty()); // Returns the integer stream
     }
 }

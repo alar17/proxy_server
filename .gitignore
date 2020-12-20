@@ -32,3 +32,4 @@ bin/*
 .bsp/*
 src/main/generated/*
 *.DS*
+/bin/
