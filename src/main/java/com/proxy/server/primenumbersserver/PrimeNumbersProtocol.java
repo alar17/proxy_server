@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.primenumbers.server.grpc.PrimeNumbersResponse;
 import com.primenumbers.server.grpc.PrimeNumbersServiceClient;
 import com.primenumbers.server.grpc.ReadNumbersRequest;
+import com.proxy.server.directives.DirectiveUtils;
 
 import akka.NotUsed;
 import akka.stream.Materializer;
@@ -47,7 +48,7 @@ public class PrimeNumbersProtocol {
             firstElement = source.take(1).runWith(Sink.head(), materializer)
                 .toCompletableFuture().get(10, TimeUnit.SECONDS); // If we don't receive the first element in 10 seconds, we will return the server error
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            return Tuple.of(Option.of("Server Error!"), Source.empty());
+            return Tuple.of(Option.of(DirectiveUtils.SERVER_OVERLOADED_MESSAGE), Source.empty());
         }
         
         // Read the first item and then reply based on that.. either an error or the 
