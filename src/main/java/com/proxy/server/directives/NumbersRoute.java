@@ -37,12 +37,11 @@ public class NumbersRoute extends AllDirectives {
                 
                 Tuple2<Option<String>, Source<Integer, NotUsed>> response = client.readItem(number);
                 if(response._1().isDefined()) {
-                    return complete(HttpResponse.create()
-                        .withStatus(StatusCodes.BAD_REQUEST)
-                        .withEntity(response._1().get()));
+                    return complete(response._1().get().equals(DirectiveUtils.SERVER_OVERLOADED_MESSAGE) ?
+                        DirectiveUtils.SERVER_OVERLOADED :
+                        DirectiveUtils.BAD_REQUEST);
                 } else {
                     Source<ByteString, NotUsed> map = response._2().map(i -> ByteString.fromString(i.toString()));
-                    
                     return completeOKWithSource(map, Marshaller.byteStringMarshaller(ContentTypes.APPLICATION_JSON), EntityStreamingSupport.json()
                         .withContentType(ContentTypes.APPLICATION_JSON)
                         .withParallelMarshalling(10, false));
